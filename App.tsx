@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [selectedWebTool, setSelectedWebTool] = useState<WebTool | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [webTools, setWebTools] = useState<WebTool[]>(() => {
@@ -34,19 +35,16 @@ const App: React.FC = () => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      console.log('PWA Install prompt deferred');
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
-      console.log('PWA was installed');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Check if already in standalone mode
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
     }
@@ -87,6 +85,7 @@ const App: React.FC = () => {
 
   const refreshIframe = () => {
     if (iframeRef.current) {
+      setIframeLoading(true);
       const currentSrc = iframeRef.current.src;
       iframeRef.current.src = '';
       setTimeout(() => {
@@ -119,6 +118,7 @@ const App: React.FC = () => {
             setWebTools={setWebTools} 
             onSelectTool={(tool) => {
               setSelectedWebTool(tool);
+              setIframeLoading(true);
               setActiveView(ToolView.WEB_TOOLS);
             }}
           />
@@ -173,21 +173,47 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-auto">
           {activeView === ToolView.WEB_TOOLS && selectedWebTool ? (
             <div className="h-full w-full flex flex-col">
-              <div className="h-10 bg-black/60 border-b border-white/10 flex items-center px-4 justify-between">
+              <div className="h-12 bg-black/60 border-b border-white/10 flex items-center px-4 justify-between">
                 <div className="flex items-center space-x-4 overflow-hidden">
                   <div className="flex items-center space-x-2">
                       <span className="text-lg">{selectedWebTool.icon}</span>
-                      <span className="text-sm font-medium text-white/80 truncate">{selectedWebTool.name}</span>
+                      <span className="text-sm font-bold text-white/80 truncate">{selectedWebTool.name}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                      <button onClick={refreshIframe} className="p-1.5 hover:bg-white/10 rounded text-white/40" title="Refresh">🔄</button>
-                      <button onClick={openExternally} className="p-1.5 hover:bg-white/10 rounded text-white/40" title="Open in browser">↗️</button>
+                  <div className="flex items-center space-x-1 border-l border-white/10 pl-4">
+                      <button onClick={refreshIframe} className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors" title="Refresh">🔄</button>
+                      <button onClick={openExternally} className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors flex items-center space-x-1" title="Open in browser">
+                        <span className="text-xs font-medium">Open Externally</span>
+                        <span>↗️</span>
+                      </button>
                   </div>
                 </div>
-                <button onClick={() => setSelectedWebTool(null)} className="px-3 py-1 bg-white/5 hover:bg-white/15 rounded-md text-white/60 text-xs transition-colors">Close</button>
+                <div className="flex items-center space-x-3">
+                    <div className="hidden md:flex flex-col items-end mr-2">
+                      <span className="text-[9px] text-white/30 uppercase font-bold leading-none">Status</span>
+                      <span className={`text-[10px] ${iframeLoading ? 'text-yellow-500' : 'text-green-500'} font-mono`}>
+                        ● {iframeLoading ? 'LOADING' : 'READY'}
+                      </span>
+                    </div>
+                    <button onClick={() => setSelectedWebTool(null)} className="px-3 py-1 bg-white/5 hover:bg-white/15 rounded-md text-white/60 text-xs transition-colors border border-white/10">Close</button>
+                </div>
               </div>
-              <div className="flex-1 relative bg-white/5">
-                <iframe ref={iframeRef} src={selectedWebTool.url} className="absolute inset-0 w-full h-full border-none" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox" />
+              <div className="flex-1 relative bg-slate-900">
+                {iframeLoading && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900 text-white/40 space-y-4">
+                    <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium">Loading Tool...</p>
+                      <p className="text-[10px] mt-2 max-w-xs opacity-60">If this takes too long, the site might be blocking iframe access (X-Frame-Options).</p>
+                    </div>
+                  </div>
+                )}
+                <iframe 
+                  ref={iframeRef} 
+                  src={selectedWebTool.url} 
+                  onLoad={() => setIframeLoading(false)}
+                  className="absolute inset-0 w-full h-full border-none" 
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox" 
+                />
               </div>
             </div>
           ) : (

@@ -5,12 +5,14 @@ import { WebTool } from '../types';
 interface WebToolManagerProps {
   webTools: WebTool[];
   setWebTools: React.Dispatch<React.SetStateAction<WebTool[]>>;
-  onSelectTool: (tool) => void;
+  onSelectTool: (tool: WebTool) => void;
 }
 
 const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, onSelectTool }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newTool, setNewTool] = useState({ name: '', url: '', icon: '🔗' });
+
+  const isHttps = window.location.protocol === 'https:';
 
   const addTool = () => {
     if (!newTool.name || !newTool.url) return;
@@ -40,7 +42,7 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
           <h2 className="text-2xl font-bold flex items-center">
             <span className="mr-2">🌐</span> Web Tool Dashboard
           </h2>
-          <p className="text-sm text-white/40 mt-1">Integrate your internal tools or favorite dev sites.</p>
+          <p className="text-sm text-white/40 mt-1">Integrate internal dashboards or dev utilities.</p>
         </div>
         <button 
           onClick={() => setIsAdding(true)}
@@ -51,42 +53,65 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {webTools.map((tool) => (
-          <div 
-            key={tool.id}
-            onClick={() => onSelectTool(tool)}
-            className="group relative bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer hover:bg-white/10 hover:border-white/30 hover:scale-[1.02] transition-all"
-          >
-            <button 
-              onClick={(e) => removeTool(tool.id, e)}
-              className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-400 transition-all"
+        {webTools.map((tool) => {
+          const isMixedContent = isHttps && tool.url.startsWith('http:');
+          return (
+            <div 
+              key={tool.id}
+              onClick={() => onSelectTool(tool)}
+              className="group relative bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer hover:bg-white/10 hover:border-white/30 hover:scale-[1.02] transition-all"
             >
-              ✕
-            </button>
-            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-left">{tool.icon}</div>
-            <div className="font-bold text-lg mb-1 truncate">{tool.name}</div>
-            <div className="text-xs text-white/30 truncate font-mono">{tool.url}</div>
-          </div>
-        ))}
+              <button 
+                onClick={(e) => removeTool(tool.id, e)}
+                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-400 transition-all"
+              >
+                ✕
+              </button>
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-4xl group-hover:scale-110 transition-transform origin-left">{tool.icon}</div>
+                {isMixedContent && (
+                   <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30 font-bold" title="Mixed Content: Browser will block this inside Iframe">
+                     HTTP WARN
+                   </span>
+                )}
+              </div>
+              <div className="font-bold text-lg mb-1 truncate">{tool.name}</div>
+              <div className="text-xs text-white/30 truncate font-mono">{tool.url}</div>
+            </div>
+          );
+        })}
 
         {webTools.length === 0 && !isAdding && (
           <div className="col-span-full text-center py-24 bg-white/5 rounded-3xl border-2 border-dashed border-white/10">
             <div className="text-white/20 text-6xl mb-4">📦</div>
             <div className="text-white/40 font-medium">No tools registered</div>
-            <p className="text-sm text-white/20 mt-2">Start by adding an internal link or a useful web utility.</p>
+            <p className="text-sm text-white/20 mt-2">Add an internal system link or web portal.</p>
           </div>
         )}
       </div>
 
-      <div className="mt-12 p-6 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl">
-        <h4 className="text-yellow-500/80 text-sm font-bold flex items-center mb-2">
-          <span className="mr-2">💡</span> Troubleshooting Internal Tools
+      <div className="mt-12 p-8 bg-blue-500/5 border border-blue-500/10 rounded-3xl">
+        <h4 className="text-blue-400 text-sm font-bold flex items-center mb-4 uppercase tracking-widest">
+          <span className="mr-2">🔧</span> Intranet Integration Guide
         </h4>
-        <ul className="text-xs text-white/40 space-y-2 list-disc pl-4">
-          <li><strong>X-Frame-Options:</strong> If a site shows a blank screen or connection refused, it probably forbids embedding. Use the ↗️ button on the tool toolbar to open it in a separate tab.</li>
-          <li><strong>Mixed Content:</strong> Ensure your tool uses <code>https://</code> if this app is accessed via HTTPS.</li>
-          <li><strong>Auth:</strong> If the tool requires login, you might need to login in your main browser first so the cookies are available.</li>
-        </ul>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+           <div>
+              <h5 className="text-white/80 text-xs font-bold mb-2">1. Security Headers (X-Frame-Options)</h5>
+              <p className="text-xs text-white/40 leading-relaxed">
+                Most internal systems block embedding by default. If the screen is blank, your internal server is likely sending <code>X-Frame-Options: DENY</code>. 
+                <br/><br/>
+                <strong>Fix:</strong> Contact your DevOps to set it to <code>ALLOW-FROM</code> your app domain, or use the "Open Externally" button.
+              </p>
+           </div>
+           <div>
+              <h5 className="text-white/80 text-xs font-bold mb-2">2. HTTPS vs HTTP (Mixed Content)</h5>
+              <p className="text-xs text-white/40 leading-relaxed">
+                If this app is on HTTPS, browser will <strong>block</strong> internal HTTP tools. 
+                <br/><br/>
+                <strong>Fix:</strong> Always try to use <code>https://</code> for your internal tools, or run this tool locally on <code>http://localhost</code>.
+              </p>
+           </div>
+        </div>
       </div>
 
       {isAdding && (
@@ -103,7 +128,7 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
                   value={newTool.name}
                   onChange={(e) => setNewTool({...newTool, name: e.target.value})}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-white transition-all"
-                  placeholder="e.g. Jenkins CI"
+                  placeholder="e.g. Jenkins / Grafana"
                 />
               </div>
               <div>
@@ -113,11 +138,14 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
                   value={newTool.url}
                   onChange={(e) => setNewTool({...newTool, url: e.target.value})}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-white transition-all font-mono text-sm"
-                  placeholder="https://jenkins.internal.com"
+                  placeholder="https://internal.tool.com"
                 />
+                {isHttps && newTool.url.startsWith('http:') && (
+                  <p className="text-[10px] text-red-400 mt-1 font-medium">⚠️ HTTPS site cannot embed HTTP content.</p>
+                )}
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 tracking-widest">Emoji Icon</label>
+                <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 tracking-widest">Icon</label>
                 <input 
                   type="text" 
                   value={newTool.icon}
