@@ -16,3 +16,15 @@ export enum ToolView {
   TRANSLATOR = 'TRANSLATOR',
   SETTINGS = 'SETTINGS'
 }
+
+export enum AIProvider {
+  GEMINI = 'GEMINI',
+  OPENAI_COMPATIBLE = 'OPENAI_COMPATIBLE'
+}
+
+export interface AIConfig {
+  provider: AIProvider;
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+}
