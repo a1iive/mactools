@@ -234,10 +234,15 @@ const App: React.FC = () => {
       <CommandPalette 
         isOpen={isCommandPaletteOpen} 
         onClose={() => setIsCommandPaletteOpen(false)} 
+        webTools={webTools}
         onSelect={(view) => {
           setActiveView(view);
           setIsCommandPaletteOpen(false);
           setSelectedWebTool(null);
+        }}
+        onSelectWebTool={(tool) => {
+          handleToolSelect(tool);
+          setIsCommandPaletteOpen(false);
         }}
       />
     </div>
