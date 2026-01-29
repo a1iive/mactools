@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'mactools-v1.2';
+const CACHE_NAME = 'mactools-v1.3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -9,7 +9,6 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
       return cache.addAll(ASSETS);
     })
   );
@@ -28,30 +27,33 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  // Ensure the new SW takes control of the page immediately
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
+  // Use a Network-First strategy: try network, then fallback to cache
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Cache hit - return response
-      if (response) {
-        return response;
-      }
-      return fetch(event.request).then((res) => {
-        // If not a valid response or not from our origin, just return it
-        if (!res || res.status !== 200 || res.type !== 'basic') {
-          return res;
+    fetch(event.request)
+      .then((response) => {
+        // If successful, clone and update cache
+        if (response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        // Clone the response to store in cache
-        const responseToCache = res.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        return response;
+      })
+      .catch(() => {
+        // If network fails, try cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          // If both fail and it's a navigation request, return index
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
         });
-        return res;
-      }).catch(() => {
-        // Fallback for offline if fetching fails
-        return caches.match('/');
-      });
-    })
+      })
   );
 });

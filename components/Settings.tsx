@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface SettingsProps {
   onInstall?: () => void;
@@ -8,7 +8,33 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ onInstall, isInstallable, isInstalled }) => {
-  const version = "1.2.0";
+  const version = "1.2.1";
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleReset = async () => {
+    if (!confirm('This will clear all your custom web tools, translation history, and reset the app. Are you sure?')) return;
+    
+    setIsResetting(true);
+    // 1. Clear LocalStorage
+    localStorage.clear();
+    
+    // 2. Unregister Service Workers
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (let registration of registrations) {
+        await registration.unregister();
+      }
+    }
+    
+    // 3. Clear Caches
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+    }
+    
+    // 4. Reload
+    window.location.reload();
+  };
   
   return (
     <div className="p-8 max-w-3xl mx-auto text-white">
@@ -47,7 +73,24 @@ const Settings: React.FC<SettingsProps> = ({ onInstall, isInstallable, isInstall
         </section>
 
         <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4 text-blue-400">Application Info</h3>
+          <h3 className="text-lg font-semibold mb-4 text-blue-400">Troubleshooting</h3>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Reset Application Data</p>
+              <p className="text-xs text-white/40">Clear cache and local storage if you experience sync issues.</p>
+            </div>
+            <button 
+              onClick={handleReset}
+              disabled={isResetting}
+              className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold border border-red-500/20 transition-all"
+            >
+              {isResetting ? 'Resetting...' : 'Reset Now'}
+            </button>
+          </div>
+        </section>
+
+        <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h3 className="text-lg font-semibold mb-4 text-purple-400">Application Info</h3>
           <div className="flex items-center justify-between py-2 border-b border-white/5">
             <span className="text-white/60">Current Version</span>
             <span className="font-mono bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-sm">{version}</span>
@@ -56,24 +99,20 @@ const Settings: React.FC<SettingsProps> = ({ onInstall, isInstallable, isInstall
             <span className="text-white/60">Update Channel</span>
             <span className="text-sm">Stable (Auto-sync)</span>
           </div>
-          <div className="mt-4 text-xs text-white/30">
-            Tip: New versions are automatically pushed from GitHub. Just refresh the app to sync.
-          </div>
         </section>
 
         <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4 text-purple-400">MacOS Global Shortcut Guide</h3>
-          <p className="text-sm text-white/60 mb-4">
-            Set a global system shortcut to launch this tool from anywhere:
-          </p>
-          <ol className="text-sm text-white/50 space-y-3 list-decimal pl-4">
-            <li>Open <strong>Automator.app</strong> on your Mac.</li>
-            <li>Choose <strong>Quick Action</strong>.</li>
-            <li>Search for <strong>"Run Shell Script"</strong> and drag it in.</li>
-            <li>Paste this command: <code className="bg-black/40 px-2 py-1 rounded text-purple-300">open -a "Google Chrome" --args --app={window.location.origin}</code></li>
-            <li>Save it as "Open MacTools".</li>
-            <li>Go to <strong>System Settings &gt; Keyboard &gt; Shortcuts &gt; Services</strong> and bind it to <kbd className="bg-white/10 px-1 rounded">Cmd+Shift+T</kbd>.</li>
-          </ol>
+          <h3 className="text-lg font-semibold mb-4 text-orange-400">Quick Shortcut Guide</h3>
+          <div className="space-y-4">
+             <div className="flex items-center justify-between text-sm">
+                <span className="text-white/60">Search Palette</span>
+                <kbd className="bg-white/10 px-2 py-1 rounded border border-white/10 text-white/80 font-mono">⌘ K</kbd>
+             </div>
+             <div className="flex items-center justify-between text-sm">
+                <span className="text-white/60">Close Palette</span>
+                <kbd className="bg-white/10 px-2 py-1 rounded border border-white/10 text-white/80 font-mono">ESC</kbd>
+             </div>
+          </div>
         </section>
       </div>
     </div>

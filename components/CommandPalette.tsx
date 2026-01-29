@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ToolView, WebTool } from '../types';
 
 interface CommandPaletteProps {
@@ -20,34 +20,40 @@ interface CommandItem {
   tool?: WebTool;
 }
 
-const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSelect, onSelectWebTool, webTools }) => {
+const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSelect, onSelectWebTool, webTools = [] }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const systemCommands: CommandItem[] = [
-    { id: 'dash', name: 'Home / Dashboard', icon: '🏠', shortcut: 'H', type: 'system', view: ToolView.DASHBOARD },
-    { id: 'trans', name: 'Smart Translator', icon: '🌍', shortcut: 'F', type: 'system', view: ToolView.TRANSLATOR },
-    { id: 'calc', name: 'Calculator', icon: '🧮', shortcut: 'C', type: 'system', view: ToolView.CALCULATOR },
-    { id: 'time', name: 'Timestamp Converter', icon: '🕒', shortcut: 'T', type: 'system', view: ToolView.TIMESTAMP },
-    { id: 'base', name: 'Base Converter (Hex/Bin)', icon: '🔢', shortcut: 'B', type: 'system', view: ToolView.BASE_CONVERTER },
-    { id: 'manage', name: 'Manage Web Tools', icon: '🌐', shortcut: 'W', type: 'system', view: ToolView.WEB_TOOLS },
-    { id: 'settings', name: 'Settings', icon: '⚙️', shortcut: 'S', type: 'system', view: ToolView.SETTINGS },
-  ];
+  const allCommands = useMemo(() => {
+    const systemCommands: CommandItem[] = [
+      { id: 'dash', name: 'Home / Dashboard', icon: '🏠', shortcut: 'H', type: 'system', view: ToolView.DASHBOARD },
+      { id: 'trans', name: 'Smart Translator', icon: '🌍', shortcut: 'F', type: 'system', view: ToolView.TRANSLATOR },
+      { id: 'calc', name: 'Calculator', icon: '🧮', shortcut: 'C', type: 'system', view: ToolView.CALCULATOR },
+      { id: 'time', name: 'Timestamp Converter', icon: '🕒', shortcut: 'T', type: 'system', view: ToolView.TIMESTAMP },
+      { id: 'base', name: 'Base Converter (Hex/Bin)', icon: '🔢', shortcut: 'B', type: 'system', view: ToolView.BASE_CONVERTER },
+      { id: 'manage', name: 'Manage Web Tools', icon: '🌐', shortcut: 'W', type: 'system', view: ToolView.WEB_TOOLS },
+      { id: 'settings', name: 'Settings', icon: '⚙️', shortcut: 'S', type: 'system', view: ToolView.SETTINGS },
+    ];
 
-  const webToolCommands: CommandItem[] = webTools.map(tool => ({
-    id: `web-${tool.id}`,
-    name: tool.name,
-    icon: tool.icon || '🔗',
-    type: 'web',
-    tool: tool
-  }));
+    const webToolCommands: CommandItem[] = (webTools || []).map(tool => ({
+      id: `web-${tool.id}`,
+      name: tool.name,
+      icon: tool.icon || '🔗',
+      type: 'web',
+      tool: tool
+    }));
 
-  const allCommands = [...systemCommands, ...webToolCommands];
+    return [...systemCommands, ...webToolCommands];
+  }, [webTools]);
 
-  const filteredCommands = allCommands.filter(c => 
-    c.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredCommands = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return allCommands;
+    return allCommands.filter(c => 
+      c.name.toLowerCase().includes(q)
+    );
+  }, [allCommands, query]);
 
   useEffect(() => {
     if (isOpen) {
@@ -57,6 +63,13 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSele
       setQuery('');
     }
   }, [isOpen]);
+
+  // Ensure index stays in bounds if filter changes
+  useEffect(() => {
+    if (selectedIndex >= filteredCommands.length && filteredCommands.length > 0) {
+      setSelectedIndex(0);
+    }
+  }, [filteredCommands.length, selectedIndex]);
 
   const handleSelection = (cmd: CommandItem) => {
     if (cmd.type === 'system' && cmd.view) {
@@ -95,7 +108,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSele
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
+            onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search tools, commands, or your web apps..."
             className="flex-1 bg-transparent border-none outline-none text-white text-lg placeholder-white/20"
