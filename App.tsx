@@ -13,6 +13,8 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ToolView>(ToolView.DASHBOARD);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [selectedWebTool, setSelectedWebTool] = useState<WebTool | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [webTools, setWebTools] = useState<WebTool[]>(() => {
@@ -26,6 +28,43 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('mac_web_tools', JSON.stringify(webTools));
   }, [webTools]);
+
+  // PWA Install Logic
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      console.log('PWA Install prompt deferred');
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      console.log('PWA was installed');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Check if already in standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const installPWA = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const toggleCommandPalette = useCallback(() => {
     setIsCommandPaletteOpen(prev => !prev);
@@ -67,7 +106,12 @@ const App: React.FC = () => {
       case ToolView.TIMESTAMP: return <TimestampConverter />;
       case ToolView.BASE_CONVERTER: return <BaseConverter />;
       case ToolView.CALCULATOR: return <Calculator />;
-      case ToolView.SETTINGS: return <Settings />;
+      case ToolView.SETTINGS: 
+        return <Settings 
+          onInstall={installPWA} 
+          isInstallable={!!deferredPrompt} 
+          isInstalled={isInstalled} 
+        />;
       case ToolView.WEB_TOOLS:
         return (
           <WebToolManager 
@@ -85,6 +129,17 @@ const App: React.FC = () => {
           <div className="flex flex-col items-center justify-center h-full text-white/80 p-12">
             <h1 className="text-4xl font-bold mb-4">Welcome to MacTools</h1>
             <p className="text-lg opacity-60 mb-8">Press <kbd className="bg-white/10 px-2 py-1 rounded">⌘K</kbd> to open command palette</p>
+            
+            {deferredPrompt && !isInstalled && (
+              <button 
+                onClick={installPWA}
+                className="mb-10 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full font-bold shadow-xl shadow-indigo-900/40 transition-all flex items-center space-x-2 animate-bounce"
+              >
+                <span>📥</span>
+                <span>Install to Desktop</span>
+              </button>
+            )}
+
             <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
               {[
                 { view: ToolView.CALCULATOR, icon: '🧮', label: 'Calculator', sub: 'Math & History' },
@@ -113,7 +168,6 @@ const App: React.FC = () => {
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
       <main className="flex-1 overflow-auto relative mac-blur bg-black/20 flex flex-col">
-        {/* PWA Drag Handle */}
         <div className="window-drag-handle shrink-0" />
         
         <div className="flex-1 overflow-auto">
