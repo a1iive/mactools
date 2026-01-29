@@ -10,7 +10,12 @@ interface WebToolManagerProps {
 
 const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, onSelectTool }) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [newTool, setNewTool] = useState({ name: '', url: '', icon: '🔗' });
+  const [newTool, setNewTool] = useState<Omit<WebTool, 'id'>>({ 
+    name: '', 
+    url: '', 
+    icon: '🔗', 
+    openMode: 'iframe' 
+  });
 
   const isHttps = window.location.protocol === 'https:';
 
@@ -26,7 +31,7 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
       id: Date.now().toString()
     };
     setWebTools([...webTools, tool]);
-    setNewTool({ name: '', url: '', icon: '🔗' });
+    setNewTool({ name: '', url: '', icon: '🔗', openMode: 'iframe' });
     setIsAdding(false);
   };
 
@@ -55,6 +60,8 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {webTools.map((tool) => {
           const isMixedContent = isHttps && tool.url.startsWith('http:');
+          const isExternal = tool.openMode === 'window';
+          
           return (
             <div 
               key={tool.id}
@@ -63,17 +70,28 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
             >
               <button 
                 onClick={(e) => removeTool(tool.id, e)}
-                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-400 transition-all"
+                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-400 transition-all z-10"
               >
                 ✕
               </button>
               <div className="flex justify-between items-start mb-4">
                 <div className="text-4xl group-hover:scale-110 transition-transform origin-left">{tool.icon}</div>
-                {isMixedContent && (
-                   <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30 font-bold" title="Mixed Content: Browser will block this inside Iframe">
-                     HTTP WARN
-                   </span>
-                )}
+                <div className="flex flex-col items-end space-y-1">
+                  {isExternal ? (
+                    <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded border border-purple-500/30 font-bold">
+                      EXTERNAL ↗
+                    </span>
+                  ) : (
+                    <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/30 font-bold">
+                      IFRAME
+                    </span>
+                  )}
+                  {isMixedContent && !isExternal && (
+                    <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30 font-bold">
+                      MIXED ERR
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="font-bold text-lg mb-1 truncate">{tool.name}</div>
               <div className="text-xs text-white/30 truncate font-mono">{tool.url}</div>
@@ -85,50 +103,47 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
           <div className="col-span-full text-center py-24 bg-white/5 rounded-3xl border-2 border-dashed border-white/10">
             <div className="text-white/20 text-6xl mb-4">📦</div>
             <div className="text-white/40 font-medium">No tools registered</div>
-            <p className="text-sm text-white/20 mt-2">Add an internal system link or web portal.</p>
           </div>
         )}
       </div>
 
-      <div className="mt-12 p-8 bg-blue-500/5 border border-blue-500/10 rounded-3xl">
-        <h4 className="text-blue-400 text-sm font-bold flex items-center mb-4 uppercase tracking-widest">
-          <span className="mr-2">🔧</span> Intranet Integration Guide
+      <div className="mt-12 p-8 bg-indigo-500/5 border border-indigo-500/10 rounded-3xl">
+        <h4 className="text-indigo-400 text-sm font-bold flex items-center mb-4 uppercase tracking-widest">
+          <span className="mr-2">💡</span> Best Practice for Intranet
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div>
-              <h5 className="text-white/80 text-xs font-bold mb-2">1. Security Headers (X-Frame-Options)</h5>
-              <p className="text-xs text-white/40 leading-relaxed">
-                Most internal systems block embedding by default. If the screen is blank, your internal server is likely sending <code>X-Frame-Options: DENY</code>. 
-                <br/><br/>
-                <strong>Fix:</strong> Contact your DevOps to set it to <code>ALLOW-FROM</code> your app domain, or use the "Open Externally" button.
-              </p>
-           </div>
-           <div>
-              <h5 className="text-white/80 text-xs font-bold mb-2">2. HTTPS vs HTTP (Mixed Content)</h5>
-              <p className="text-xs text-white/40 leading-relaxed">
-                If this app is on HTTPS, browser will <strong>block</strong> internal HTTP tools. 
-                <br/><br/>
-                <strong>Fix:</strong> Always try to use <code>https://</code> for your internal tools, or run this tool locally on <code>http://localhost</code>.
-              </p>
-           </div>
+        <div className="space-y-4 text-xs text-white/40 leading-relaxed">
+          <p>
+            <strong>The "Why":</strong> Browsers block <code>http://</code> inside <code>https://</code> for safety. 
+            Also, many internal tools (like Jenkins, GitLab) explicitly forbid being displayed in an Iframe.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-black/20 p-4 rounded-xl">
+              <p className="text-white/60 font-bold mb-1">✅ Recommended: independent Window</p>
+              Use this for complex internal systems. It bypasses all Iframe security headers and Mixed Content errors.
+            </div>
+            <div className="bg-black/20 p-4 rounded-xl">
+              <p className="text-white/60 font-bold mb-1">🚀 Advanced: Run Locally</p>
+              Download this project and run <code>npm run dev</code>. Browsers allow <code>localhost</code> to embed almost anything.
+            </div>
+          </div>
         </div>
       </div>
 
       {isAdding && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-white/20 rounded-3xl p-8 w-full max-w-md shadow-2xl ring-1 ring-white/10">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-white/20 rounded-3xl p-8 w-full max-w-md shadow-2xl">
             <h3 className="text-xl font-bold mb-6 flex items-center">
-               <span className="mr-2">➕</span> Add New Tool
+               <span className="mr-2">➕</span> Add Web Utility
             </h3>
             <div className="space-y-5">
               <div>
-                <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 tracking-widest">Tool Display Name</label>
+                <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 tracking-widest">Display Name</label>
                 <input 
                   type="text" 
                   value={newTool.name}
                   onChange={(e) => setNewTool({...newTool, name: e.target.value})}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-white transition-all"
-                  placeholder="e.g. Jenkins / Grafana"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 outline-none text-white focus:border-blue-500 transition-all"
+                  placeholder="e.g. Jenkins Dashboard"
                 />
               </div>
               <div>
@@ -137,37 +152,35 @@ const WebToolManager: React.FC<WebToolManagerProps> = ({ webTools, setWebTools, 
                   type="text" 
                   value={newTool.url}
                   onChange={(e) => setNewTool({...newTool, url: e.target.value})}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-white transition-all font-mono text-sm"
-                  placeholder="https://internal.tool.com"
-                />
-                {isHttps && newTool.url.startsWith('http:') && (
-                  <p className="text-[10px] text-red-400 mt-1 font-medium">⚠️ HTTPS site cannot embed HTTP content.</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 tracking-widest">Icon</label>
-                <input 
-                  type="text" 
-                  value={newTool.icon}
-                  onChange={(e) => setNewTool({...newTool, icon: e.target.value})}
-                  className="w-16 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-center text-xl"
-                  placeholder="🚀"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 outline-none text-white focus:border-blue-500 transition-all font-mono text-sm"
+                  placeholder="http://192.168.1.50:8080"
                 />
               </div>
               
-              <div className="flex space-x-3 mt-10">
-                <button 
-                  onClick={() => setIsAdding(false)}
-                  className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-white/60 font-medium"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={addTool}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors font-bold text-white shadow-lg shadow-blue-900/40"
-                >
-                  Create Tool
-                </button>
+              <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                <label className="block text-[10px] font-bold text-white/40 uppercase mb-3 tracking-widest">Opening Strategy</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => setNewTool({...newTool, openMode: 'iframe'})}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${newTool.openMode === 'iframe' ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/40'}`}
+                  >
+                    Internal Frame
+                  </button>
+                  <button 
+                    onClick={() => setNewTool({...newTool, openMode: 'window'})}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${newTool.openMode === 'window' ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/40'}`}
+                  >
+                    New Window
+                  </button>
+                </div>
+                <p className="text-[10px] text-white/30 mt-3 italic">
+                  {newTool.openMode === 'window' ? 'Best for intranet/local tools with security headers.' : 'Best for modern HTTPS-friendly sites.'}
+                </p>
+              </div>
+
+              <div className="flex space-x-3 mt-8">
+                <button onClick={() => setIsAdding(false)} className="flex-1 px-4 py-2.5 text-white/40 font-bold">Cancel</button>
+                <button onClick={addTool} className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-lg shadow-blue-900/40 transition-all">Create</button>
               </div>
             </div>
           </div>

@@ -21,8 +21,8 @@ const App: React.FC = () => {
   const [webTools, setWebTools] = useState<WebTool[]>(() => {
     const saved = localStorage.getItem('mac_web_tools');
     return saved ? JSON.parse(saved) : [
-      { id: '1', name: 'Google (Search Only)', url: 'https://www.google.com/search?igu=1', icon: '🔍' },
-      { id: '2', name: 'GitHub', url: 'https://github.com', icon: '🐙' }
+      { id: '1', name: 'Google (Search Only)', url: 'https://www.google.com/search?igu=1', icon: '🔍', openMode: 'iframe' },
+      { id: '2', name: 'GitHub', url: 'https://github.com', icon: '🐙', openMode: 'iframe' }
     ];
   });
 
@@ -100,6 +100,16 @@ const App: React.FC = () => {
     }
   };
 
+  const handleToolSelect = (tool: WebTool) => {
+    if (tool.openMode === 'window') {
+      window.open(tool.url, '_blank');
+    } else {
+      setSelectedWebTool(tool);
+      setIframeLoading(true);
+      setActiveView(ToolView.WEB_TOOLS);
+    }
+  };
+
   const renderView = () => {
     switch (activeView) {
       case ToolView.TIMESTAMP: return <TimestampConverter />;
@@ -116,11 +126,7 @@ const App: React.FC = () => {
           <WebToolManager 
             webTools={webTools} 
             setWebTools={setWebTools} 
-            onSelectTool={(tool) => {
-              setSelectedWebTool(tool);
-              setIframeLoading(true);
-              setActiveView(ToolView.WEB_TOOLS);
-            }}
+            onSelectTool={handleToolSelect}
           />
         );
       case ToolView.DASHBOARD:

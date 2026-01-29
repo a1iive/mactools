@@ -4,6 +4,7 @@ export interface WebTool {
   name: string;
   url: string;
   icon: string;
+  openMode?: 'iframe' | 'window';
 }
 
 export enum ToolView {
