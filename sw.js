@@ -1,11 +1,8 @@
 
-const CACHE_NAME = 'mactools-v1';
+const CACHE_NAME = 'mactools-v1.1';
 const ASSETS = [
   '/',
-  '/index.html',
-  '/index.tsx',
-  '/App.tsx',
-  '/types.ts'
+  '/index.html'
 ];
 
 self.addEventListener('install', (event) => {
