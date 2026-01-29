@@ -1,0 +1,8 @@
+{
+  "name": "MacTools Pro",
+  "description": "A macOS-inspired productivity utility for developers featuring timestamp conversion, base conversion, and integrated web tool management.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
