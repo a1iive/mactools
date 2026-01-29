@@ -131,7 +131,6 @@ const Calculator: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handleInput(btn.value || btn.label)}
-                // Removed the non-existent btn.colSpan property check and simplified the logic
                 className={`${btn.className} h-14 rounded-full flex items-center justify-center text-xl font-medium transition-all active:scale-95 ${btn.label === '0' ? 'col-span-2 aspect-auto' : 'aspect-square'}`}
               >
                 {btn.label}

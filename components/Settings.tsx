@@ -37,7 +37,7 @@ const Settings: React.FC = () => {
             <li>Search for <strong>"Run Shell Script"</strong> and drag it in.</li>
             <li>Paste this command: <code className="bg-black/40 px-2 py-1 rounded text-purple-300">open -a "Google Chrome" --args --app=YOUR_APP_URL</code> (or the name of the installed PWA).</li>
             <li>Save it as "Open MacTools".</li>
-            <li>Go to <strong>System Settings > Keyboard > Shortcuts > Services</strong> and bind it to a key like <kbd className="bg-white/10 px-1 rounded">Cmd+Shift+T</kbd>.</li>
+            <li>Go to <strong>System Settings &gt; Keyboard &gt; Shortcuts &gt; Services</strong> and bind it to a key like <kbd className="bg-white/10 px-1 rounded">Cmd+Shift+T</kbd>.</li>
           </ol>
         </section>
 
