@@ -5,6 +5,7 @@ import TimestampConverter from './components/TimestampConverter';
 import BaseConverter from './components/BaseConverter';
 import WebToolManager from './components/WebToolManager';
 import Calculator from './components/Calculator';
+import Translator from './components/Translator';
 import CommandPalette from './components/CommandPalette';
 import Settings from './components/Settings';
 import { ToolView, WebTool } from './types';
@@ -115,6 +116,7 @@ const App: React.FC = () => {
       case ToolView.TIMESTAMP: return <TimestampConverter />;
       case ToolView.BASE_CONVERTER: return <BaseConverter />;
       case ToolView.CALCULATOR: return <Calculator />;
+      case ToolView.TRANSLATOR: return <Translator />;
       case ToolView.SETTINGS: 
         return <Settings 
           onInstall={installPWA} 
@@ -132,7 +134,7 @@ const App: React.FC = () => {
       case ToolView.DASHBOARD:
       default:
         return (
-          <div className="flex flex-col items-center justify-center h-full text-white/80 p-12">
+          <div className="flex flex-col items-center justify-center h-full text-white/80 p-12 overflow-y-auto">
             <h1 className="text-4xl font-bold mb-4">Welcome to MacTools</h1>
             <p className="text-lg opacity-60 mb-8">Press <kbd className="bg-white/10 px-2 py-1 rounded">⌘K</kbd> to open command palette</p>
             
@@ -148,6 +150,7 @@ const App: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
               {[
+                { view: ToolView.TRANSLATOR, icon: '🌍', label: 'Translator', sub: 'AI Smart Translate' },
                 { view: ToolView.CALCULATOR, icon: '🧮', label: 'Calculator', sub: 'Math & History' },
                 { view: ToolView.TIMESTAMP, icon: '🕒', label: 'Timestamp', sub: 'Unix converter' },
                 { view: ToolView.BASE_CONVERTER, icon: '🔢', label: 'Base Converter', sub: 'Hex/Bin/Oct' },

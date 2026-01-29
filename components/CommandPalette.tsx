@@ -14,6 +14,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSele
 
   const commands = [
     { id: ToolView.DASHBOARD, name: 'Home / Dashboard', icon: '🏠', shortcut: 'H' },
+    { id: ToolView.TRANSLATOR, name: 'Smart Translator', icon: '🌍', shortcut: 'F' },
     { id: ToolView.CALCULATOR, name: 'Calculator', icon: '🧮', shortcut: 'C' },
     { id: ToolView.TIMESTAMP, name: 'Timestamp Converter', icon: '🕒', shortcut: 'T' },
     { id: ToolView.BASE_CONVERTER, name: 'Base Converter (Hex/Bin)', icon: '🔢', shortcut: 'B' },
@@ -21,7 +22,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSele
   ];
 
   const filteredCommands = commands.filter(c => 
-    c.name.toLowerCase().includes(query.toLowerCase())
+    c.name.toLowerCase().includes(query.toLowerCase()) || 
+    c.id.toLowerCase().includes(query.toLowerCase())
   );
 
   useEffect(() => {

@@ -12,6 +12,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
 
   const items = [
     { view: ToolView.DASHBOARD, label: 'Dashboard', icon: '🏠' },
+    { view: ToolView.TRANSLATOR, label: 'Translator', icon: '🌍' },
     { view: ToolView.CALCULATOR, label: 'Calculator', icon: '🧮' },
     { view: ToolView.TIMESTAMP, label: 'Timestamp', icon: '🕒' },
     { view: ToolView.BASE_CONVERTER, label: 'Base Conv', icon: '🔢' },
@@ -61,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
             System
           </div>
           <div className="px-3 py-1 text-white/50 text-[10px]">
-            v1.1.0 Stable
+            v1.2.0 Stable
           </div>
         </div>
       )}
