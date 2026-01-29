@@ -19,6 +19,7 @@ const Translator: React.FC = () => {
   const [sourceLang, setSourceLang] = useState('auto');
   const [targetLang, setTargetLang] = useState('zh');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [history, setHistory] = useState<{source: string, target: string}[]>(() => {
     const saved = localStorage.getItem('mac_translate_history');
     return saved ? JSON.parse(saved) : [];
@@ -31,31 +32,50 @@ const Translator: React.FC = () => {
   const handleTranslate = useCallback(async () => {
     if (!sourceText.trim()) {
       setTargetText('');
+      setErrorMessage(null);
+      return;
+    }
+
+    // Capture the key from the environment
+    const apiKey = process.env.API_KEY;
+    
+    // Check if key is actually present and not just the string "undefined" (a common build-time issue)
+    if (!apiKey || apiKey === 'undefined' || apiKey === '') {
+      setErrorMessage('API Key is missing or invalid. Please check your Vercel Environment Variables.');
       return;
     }
 
     setIsLoading(true);
+    setErrorMessage(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Translate the following text to ${languages.find(l => l.code === targetLang)?.name}. 
+      const ai = new GoogleGenAI({ apiKey });
+      const promptText = `Translate the following text to ${languages.find(l => l.code === targetLang)?.name}. 
       Source language hint: ${sourceLang === 'auto' ? 'detect automatically' : sourceLang}.
       Provide only the translated text.
       Text: "${sourceText}"`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
       });
 
       const translated = response.text?.trim() || '';
       setTargetText(translated);
       
       if (translated) {
-        setHistory(prev => [{ source: sourceText, target: translated }, ...prev].slice(0, 10));
+        setHistory(prev => {
+          const newHistory = [{ source: sourceText, target: translated }, ...prev];
+          return newHistory.filter((v, i, a) => a.findIndex(t => t.source === v.source) === i).slice(0, 10);
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Translation error:', error);
-      setTargetText('Error occurred during translation. Please try again.');
+      // Handle quota or safety errors specifically
+      if (error.message?.includes('quota')) {
+        setErrorMessage('Translation failed: API Quota exceeded. Please try again later.');
+      } else {
+        setErrorMessage(`Translation failed: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,13 +112,24 @@ const Translator: React.FC = () => {
         </div>
         <div className="flex bg-white/5 rounded-xl p-1 border border-white/10">
           <button 
-            onClick={() => setSourceText('')}
+            onClick={() => { setSourceText(''); setTargetText(''); setErrorMessage(null); }}
             className="px-4 py-1.5 text-xs font-bold text-white/40 hover:text-white transition-colors"
           >
             Clear
           </button>
         </div>
       </div>
+
+      {errorMessage && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center space-x-3">
+          <span className="text-red-500">⚠️</span>
+          <div className="text-sm text-red-400">
+            <p className="font-bold">Error</p>
+            <p>{errorMessage}</p>
+            <p className="text-[10px] mt-1 opacity-60">Tip: If you just added the key in Vercel, you need to trigger a NEW DEPLOYMENT for it to take effect.</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Source Section */}
@@ -110,7 +141,7 @@ const Translator: React.FC = () => {
               className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               {languages.map(lang => (
-                <option key={lang.code} value={lang.code}>{lang.name}</option>
+                <option key={lang.code} value={lang.code} className="bg-slate-900">{lang.name}</option>
               ))}
             </select>
           </div>
@@ -124,7 +155,7 @@ const Translator: React.FC = () => {
           </div>
         </div>
 
-        {/* Swap Button (Middle for desktop, but logically here) */}
+        {/* Swap Button (Middle for desktop) */}
         <div className="hidden lg:flex items-center justify-center -mx-3 z-10">
           <button 
             onClick={swapLanguages}
@@ -144,7 +175,7 @@ const Translator: React.FC = () => {
               className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               {languages.filter(l => l.code !== 'auto').map(lang => (
-                <option key={lang.code} value={lang.code}>{lang.name}</option>
+                <option key={lang.code} value={lang.code} className="bg-slate-900">{lang.name}</option>
               ))}
             </select>
             <button 
@@ -177,7 +208,7 @@ const Translator: React.FC = () => {
           {history.length > 0 ? history.map((item, i) => (
             <div 
               key={i} 
-              onClick={() => { setSourceText(item.source); setTargetText(item.target); }}
+              onClick={() => { setSourceText(item.source); setTargetText(item.target); setErrorMessage(null); }}
               className="bg-white/5 hover:bg-white/10 border border-white/5 p-3 rounded-xl cursor-pointer transition-colors group"
             >
               <div className="text-xs text-white/60 truncate mb-1">{item.source}</div>
