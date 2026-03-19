@@ -8,6 +8,7 @@ import Calculator from './components/Calculator';
 import Translator from './components/Translator';
 import CommandPalette from './components/CommandPalette';
 import Settings from './components/Settings';
+import Scratchpad from './components/Scratchpad';
 import { ToolView, WebTool } from './types';
 
 const App: React.FC = () => {
@@ -117,6 +118,7 @@ const App: React.FC = () => {
       case ToolView.BASE_CONVERTER: return <BaseConverter />;
       case ToolView.CALCULATOR: return <Calculator />;
       case ToolView.TRANSLATOR: return <Translator />;
+      case ToolView.SCRATCHPAD: return <Scratchpad />;
       case ToolView.SETTINGS: 
         return <Settings 
           onInstall={installPWA} 
@@ -135,8 +137,8 @@ const App: React.FC = () => {
       default:
         return (
           <div className="flex flex-col items-center justify-center h-full text-white/80 p-12 overflow-y-auto">
-            <h1 className="text-4xl font-bold mb-4">Welcome to MacTools</h1>
-            <p className="text-lg opacity-60 mb-8">Press <kbd className="bg-white/10 px-2 py-1 rounded">⌘K</kbd> to open command palette</p>
+            <h1 className="text-4xl font-bold mb-4">欢迎使用 MacTools</h1>
+            <p className="text-lg opacity-60 mb-8">按 <kbd className="bg-white/10 px-2 py-1 rounded text-sm font-mono">⌘K</kbd> 打开命令面板</p>
             
             {deferredPrompt && !isInstalled && (
               <button 
@@ -144,17 +146,18 @@ const App: React.FC = () => {
                 className="mb-10 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full font-bold shadow-xl shadow-indigo-900/40 transition-all flex items-center space-x-2 animate-bounce"
               >
                 <span>📥</span>
-                <span>Install to Desktop</span>
+                <span>安装到桌面</span>
               </button>
             )}
 
             <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
               {[
-                { view: ToolView.TRANSLATOR, icon: '🌍', label: 'Translator', sub: 'AI Smart Translate' },
-                { view: ToolView.CALCULATOR, icon: '🧮', label: 'Calculator', sub: 'Math & History' },
-                { view: ToolView.TIMESTAMP, icon: '🕒', label: 'Timestamp', sub: 'Unix converter' },
-                { view: ToolView.BASE_CONVERTER, icon: '🔢', label: 'Base Converter', sub: 'Hex/Bin/Oct' },
-                { view: ToolView.WEB_TOOLS, icon: '🌐', label: 'Web Tools', sub: 'Embedded apps' }
+                { view: ToolView.TRANSLATOR, icon: '🌍', label: '智能翻译', sub: 'AI 驱动的翻译引擎' },
+                { view: ToolView.SCRATCHPAD, icon: '📝', label: '文本草稿箱', sub: '临时记录与文字草稿' },
+                { view: ToolView.CALCULATOR, icon: '🧮', label: '计算器', sub: '数学计算与历史记录' },
+                { view: ToolView.TIMESTAMP, icon: '🕒', label: '时间戳转换', sub: 'Unix 时间戳互转' },
+                { view: ToolView.BASE_CONVERTER, icon: '🔢', label: '进制转换', sub: '二进制/十六进制等' },
+                { view: ToolView.WEB_TOOLS, icon: '🌐', label: '网页工具', sub: '嵌入式网页应用' }
               ].map(card => (
                 <button 
                   key={card.view}
@@ -189,21 +192,21 @@ const App: React.FC = () => {
                       <span className="text-sm font-bold text-white/80 truncate">{selectedWebTool.name}</span>
                   </div>
                   <div className="flex items-center space-x-1 border-l border-white/10 pl-4">
-                      <button onClick={refreshIframe} className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors" title="Refresh">🔄</button>
-                      <button onClick={openExternally} className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors flex items-center space-x-1" title="Open in browser">
-                        <span className="text-xs font-medium">Open Externally</span>
+                      <button onClick={refreshIframe} className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors" title="刷新">🔄</button>
+                      <button onClick={openExternally} className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors flex items-center space-x-1" title="在浏览器中打开">
+                        <span className="text-xs font-medium">外部打开</span>
                         <span>↗️</span>
                       </button>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                     <div className="hidden md:flex flex-col items-end mr-2">
-                      <span className="text-[9px] text-white/30 uppercase font-bold leading-none">Status</span>
+                      <span className="text-[9px] text-white/30 uppercase font-bold leading-none">状态</span>
                       <span className={`text-[10px] ${iframeLoading ? 'text-yellow-500' : 'text-green-500'} font-mono`}>
-                        ● {iframeLoading ? 'LOADING' : 'READY'}
+                        ● {iframeLoading ? '正在加载' : '就绪'}
                       </span>
                     </div>
-                    <button onClick={() => setSelectedWebTool(null)} className="px-3 py-1 bg-white/5 hover:bg-white/15 rounded-md text-white/60 text-xs transition-colors border border-white/10">Close</button>
+                    <button onClick={() => setSelectedWebTool(null)} className="px-3 py-1 bg-white/5 hover:bg-white/15 rounded-md text-white/60 text-xs transition-colors border border-white/10">关闭</button>
                 </div>
               </div>
               <div className="flex-1 relative bg-slate-900">
@@ -211,8 +214,8 @@ const App: React.FC = () => {
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900 text-white/40 space-y-4">
                     <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
                     <div className="text-center">
-                      <p className="text-sm font-medium">Loading Tool...</p>
-                      <p className="text-[10px] mt-2 max-w-xs opacity-60">If this takes too long, the site might be blocking iframe access (X-Frame-Options).</p>
+                      <p className="text-sm font-medium">正在加载工具...</p>
+                      <p className="text-[10px] mt-2 max-w-xs opacity-60">如果加载时间过长，该网站可能禁用了 iframe 访问 (X-Frame-Options)。</p>
                     </div>
                   </div>
                 )}

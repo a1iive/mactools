@@ -29,6 +29,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSele
     const systemCommands: CommandItem[] = [
       { id: 'dash', name: 'Home / Dashboard', icon: '🏠', shortcut: 'H', type: 'system', view: ToolView.DASHBOARD },
       { id: 'trans', name: 'Smart Translator', icon: '🌍', shortcut: 'F', type: 'system', view: ToolView.TRANSLATOR },
+      { id: 'scratch', name: 'Scratchpad / Text Editor', icon: '📝', shortcut: 'E', type: 'system', view: ToolView.SCRATCHPAD },
       { id: 'calc', name: 'Calculator', icon: '🧮', shortcut: 'C', type: 'system', view: ToolView.CALCULATOR },
       { id: 'time', name: 'Timestamp Converter', icon: '🕒', shortcut: 'T', type: 'system', view: ToolView.TIMESTAMP },
       { id: 'base', name: 'Base Converter (Hex/Bin)', icon: '🔢', shortcut: 'B', type: 'system', view: ToolView.BASE_CONVERTER },

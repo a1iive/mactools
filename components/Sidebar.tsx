@@ -11,13 +11,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const items = [
-    { view: ToolView.DASHBOARD, label: 'Dashboard', icon: '🏠' },
-    { view: ToolView.TRANSLATOR, label: 'Translator', icon: '🌍' },
-    { view: ToolView.CALCULATOR, label: 'Calculator', icon: '🧮' },
-    { view: ToolView.TIMESTAMP, label: 'Timestamp', icon: '🕒' },
-    { view: ToolView.BASE_CONVERTER, label: 'Base Conv', icon: '🔢' },
-    { view: ToolView.WEB_TOOLS, label: 'Web Tools', icon: '🌐' },
-    { view: ToolView.SETTINGS, label: 'Settings', icon: '⚙️' },
+    { view: ToolView.DASHBOARD, label: '仪表盘', icon: '🏠' },
+    { view: ToolView.TRANSLATOR, label: '智能翻译', icon: '🌍' },
+    { view: ToolView.SCRATCHPAD, label: '文本草稿箱', icon: '📝' },
+    { view: ToolView.CALCULATOR, label: '计算器', icon: '🧮' },
+    { view: ToolView.TIMESTAMP, label: '时间戳转换', icon: '🕒' },
+    { view: ToolView.BASE_CONVERTER, label: '进制转换', icon: '🔢' },
+    { view: ToolView.WEB_TOOLS, label: '网页工具', icon: '🌐' },
+    { view: ToolView.SETTINGS, label: '设置', icon: '⚙️' },
   ];
 
   return (
@@ -59,10 +60,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
       {!isCollapsed && (
         <div className="mt-auto pt-4 border-t border-white/10">
           <div className="px-3 py-2 text-[10px] text-white/30 uppercase tracking-widest font-bold">
-            System
+            系统信息
           </div>
           <div className="px-3 py-1 text-white/50 text-[10px]">
-            v1.2.0 Stable
+            v1.2.0 稳定版
           </div>
         </div>
       )}

@@ -4,14 +4,14 @@ import { GoogleGenAI } from "@google/genai";
 import { AIProvider, AIConfig } from '../types';
 
 const languages = [
-  { code: 'auto', name: 'Auto Detect' },
-  { code: 'en', name: 'English' },
-  { code: 'zh', name: 'Chinese (Simplified)' },
-  { code: 'ja', name: 'Japanese' },
-  { code: 'ko', name: 'Korean' },
-  { code: 'fr', name: 'French' },
-  { code: 'de', name: 'German' },
-  { code: 'es', name: 'Spanish' },
+  { code: 'auto', name: '自动检测' },
+  { code: 'en', name: '英语' },
+  { code: 'zh', name: '中文 (简体)' },
+  { code: 'ja', name: '日语' },
+  { code: 'ko', name: '韩语' },
+  { code: 'fr', name: '法语' },
+  { code: 'de', name: '德语' },
+  { code: 'es', name: '西班牙语' },
 ];
 
 const Translator: React.FC = () => {
@@ -82,7 +82,7 @@ const Translator: React.FC = () => {
       if (aiConfig.provider === AIProvider.OPENAI_COMPATIBLE) {
         // --- Custom OpenAI Compatible Logic ---
         if (!aiConfig.apiKey) {
-          throw new Error('Custom API Key is missing. Please check Settings.');
+          throw new Error('自定义 API Key 缺失，请检查设置。');
         }
 
         const response = await fetch(`${aiConfig.baseUrl.replace(/\/$/, '')}/chat/completions`, {
@@ -100,7 +100,7 @@ const Translator: React.FC = () => {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error?.message || `HTTP ${response.status}: Failed to fetch translation.`);
+          throw new Error(errorData.error?.message || `HTTP ${response.status}: 翻译请求失败。`);
         }
 
         const data = await response.json();
@@ -110,7 +110,7 @@ const Translator: React.FC = () => {
         // --- Built-in Gemini Logic ---
         const apiKey = process.env.API_KEY;
         if (!apiKey || apiKey === 'undefined') {
-          throw new Error('Built-in Gemini API Key is not configured in environment.');
+          throw new Error('内置 Gemini API Key 未在环境中配置。');
         }
 
         const response = await retryWithBackoff(async () => {
@@ -132,7 +132,7 @@ const Translator: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Translation error:', error);
-      setErrorMessage(error.message || 'Unknown error occurred.');
+      setErrorMessage(error.message || '发生未知错误。');
     } finally {
       setIsLoading(false);
     }
@@ -161,17 +161,17 @@ const Translator: React.FC = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl font-bold flex items-center">
-            <span className="mr-2">🌍</span> Smart Translator
+            <span className="mr-2">🌍</span> 智能翻译器
           </h2>
           <p className="text-sm text-white/40 mt-1">
-            Using: <span className="text-indigo-400 font-bold">{aiConfig.provider === AIProvider.GEMINI ? 'Gemini' : `Custom (${aiConfig.model})`}</span>
+            使用引擎: <span className="text-indigo-400 font-bold">{aiConfig.provider === AIProvider.GEMINI ? 'Gemini' : `自定义 (${aiConfig.model})`}</span>
           </p>
         </div>
         <button 
           onClick={() => { setSourceText(''); setTargetText(''); setErrorMessage(null); }}
           className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-white/40 hover:text-white transition-colors"
         >
-          Clear All
+          清空全部
         </button>
       </div>
 
@@ -179,7 +179,7 @@ const Translator: React.FC = () => {
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center space-x-3">
           <span className="text-red-500 text-xl">⚠️</span>
           <div className="text-sm text-red-400">
-            <p className="font-bold">Engine Error</p>
+            <p className="font-bold">引擎错误</p>
             <p className="opacity-80">{errorMessage}</p>
           </div>
         </div>
@@ -191,7 +191,7 @@ const Translator: React.FC = () => {
             <select 
               value={sourceLang}
               onChange={(e) => setSourceLang(e.target.value)}
-              className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+              className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
             >
               {languages.map(lang => (
                 <option key={lang.code} value={lang.code} className="bg-slate-900">{lang.name}</option>
@@ -201,7 +201,7 @@ const Translator: React.FC = () => {
           <textarea
             value={sourceText}
             onChange={(e) => setSourceText(e.target.value)}
-            placeholder="Type text to translate..."
+            placeholder="请输入要翻译的内容..."
             className="w-full h-48 bg-black/30 border border-white/10 rounded-2xl p-4 text-lg focus:outline-none focus:border-indigo-500 transition-all resize-none"
           />
         </div>
@@ -211,6 +211,7 @@ const Translator: React.FC = () => {
             onClick={swapLanguages}
             disabled={sourceLang === 'auto'}
             className="w-10 h-10 bg-indigo-600 hover:bg-indigo-500 disabled:bg-white/10 rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90"
+            title="交换语言"
           >
             ⇄
           </button>
@@ -221,7 +222,7 @@ const Translator: React.FC = () => {
             <select 
               value={targetLang}
               onChange={(e) => setTargetLang(e.target.value)}
-              className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+              className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
             >
               {languages.filter(l => l.code !== 'auto').map(lang => (
                 <option key={lang.code} value={lang.code} className="bg-slate-900">{lang.name}</option>
@@ -230,6 +231,7 @@ const Translator: React.FC = () => {
             <button 
               onClick={() => navigator.clipboard.writeText(targetText)}
               className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white"
+              title="复制到剪贴板"
             >
               📋
             </button>
@@ -238,17 +240,17 @@ const Translator: React.FC = () => {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center h-full space-y-3 text-white/30">
                 <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs">Connecting to {aiConfig.provider === AIProvider.GEMINI ? 'Gemini' : 'Custom Provider'}...</span>
+                <span className="text-xs">正在连接 {aiConfig.provider === AIProvider.GEMINI ? 'Gemini' : '自定义引擎'}...</span>
               </div>
             ) : (
-              targetText || <span className="text-white/20 italic">Result will appear here</span>
+              targetText || <span className="text-white/20 italic">翻译结果将显示在这里</span>
             )}
           </div>
         </div>
       </div>
 
       <div className="mt-auto">
-        <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-4">Recent History</h4>
+        <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-4">最近历史</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-auto pr-2 custom-scrollbar">
           {history.map((item, i) => (
             <div 
